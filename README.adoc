@@ -2,6 +2,7 @@
 :icons: font
 :sectnums:
 :toc:
+:toc-placement: preamble
 
 The dependencies and other resources are under link:resources/[`resources/`]. Please issue all of the following shell statements from within the root directory of this repository. Sections with titles starting with A, B, ... are alternative.
 

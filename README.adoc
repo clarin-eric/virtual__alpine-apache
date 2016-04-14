@@ -1,0 +1,37 @@
+= Alpine Linux with Apache httpd base Docker image
+:icons: font
+:sectnums:
+:toc:
+
+The dependencies and other resources are under link:resources/[`resources/`]. Please issue all of the following shell statements from within the root directory of this repository. Sections with titles starting with A, B, ... are alternative.
+
+== Dependencies
+
+=== Resources
+
+. The CLARIN TLS key store under `/root/certstore2/`.
+
+=== Software
+
+. https://packer.io[Packer] 0.10.
+. https://www.docker.com/[Docker] 1.10.
+
+== To build the image
+
+=== Enter a build environment
+
+[source,Sh]
+----
+env \
+  IMAGE_NAME='alpine-apache' \
+  IMAGE_TAG='0.1.0' \
+  REGISTRY='docker.clarin.eu' \
+    sh
+----
+
+=== Build the image
+
+[source,Sh]
+----
+packer build 'packer/docker.json'
+----

@@ -1,0 +1,43 @@
+{
+    "variables": {
+        "image_name": "{{env `IMAGE_NAME`}}",
+        "image_tag": "{{env `IMAGE_TAG`}}",
+        "registry": "{{env `REGISTRY`}}",
+        "resources_dir_path": "{{template_dir}}/../resources/"
+    },
+    "builders": [
+        {
+            "commit": true,
+            "image":  "alpine:3.3",
+            "name": "{{user `image_name`}}",
+            "pull": false,
+            "run_command": [
+                "--volume=/root/certstore2/:/root/certstore2/:ro",
+                "--volume={{user `resources_dir_path`}}/etc/apk/repositories:/tmp/etc/apk/repositories:ro",
+                "--volume={{user `resources_dir_path`}}/etc/apache2/conf.d/TLS.conf:/tmp/etc/apache2/conf.d/TLS.conf:ro",
+                "-d", "-i", "-t", "{{.Image}}", "/bin/sh"
+            ],
+            "type": "docker"
+        }
+    ],
+    "provisioners": [
+        {
+            "environment_vars": [
+                "LANG=en_US.UTF-8",
+                "LC_ALL=en_US.UTF-8",
+                "LANGUAGE=en_US.UTF-8"],
+            "scripts": [
+                "{{template_dir}}/../provision.sh",
+                "{{template_dir}}/../provision.py"
+            ],
+            "type": "shell"
+        }
+    ],
+    "post-processors": [
+        {
+            "repository": "{{user `registry`}}/{{user `image_name`}}",
+            "tag": "{{user `image_tag`}}",
+            "type": "docker-tag"
+        }
+    ]
+}

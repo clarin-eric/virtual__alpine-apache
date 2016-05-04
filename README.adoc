@@ -23,7 +23,7 @@ The dependencies and other resources are under link:resources/[`resources/`]. Pl
 === Software
 
 . https://packer.io[Packer] 0.10.
-. https://www.docker.com/[Docker] 1.10.
+. https://www.docker.com/[Docker] 1.11.
 
 == To build the image
 
@@ -33,7 +33,7 @@ The dependencies and other resources are under link:resources/[`resources/`]. Pl
 ----
 env \
   IMAGE_NAME='alpine-apache' \
-  IMAGE_TAG='0.2.0' \
+  IMAGE_TAG='0.3.0' \
   REGISTRY='docker.clarin.eu' \
     sh
 ----

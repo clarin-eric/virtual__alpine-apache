@@ -1,8 +1,16 @@
 = Alpine Linux with Apache httpd base Docker image
-:icons: font
+:caution-caption: ☡ CAUTION
+:important-caption: ❗ IMPORTANT
+:note-caption: 🛈 NOTE
+:sectanchors:
+:sectlinks:
 :sectnums:
-:toc:
+:sectnumlevels: 6
+:source-highlighter: pygments
+:tip-caption: 💡 TIP
 :toc-placement: preamble
+:toc:
+:warning-caption: ⚠ WARNING
 
 The dependencies and other resources are under link:resources/[`resources/`]. Please issue all of the following shell statements from within the root directory of this repository. Sections with titles starting with A, B, ... are alternative.
 
@@ -21,18 +29,18 @@ The dependencies and other resources are under link:resources/[`resources/`]. Pl
 
 === Enter a build environment
 
-[source,Sh]
+[source,sh]
 ----
 env \
   IMAGE_NAME='alpine-apache' \
-  IMAGE_TAG='0.1.0' \
+  IMAGE_TAG='0.2.0' \
   REGISTRY='docker.clarin.eu' \
     sh
 ----
 
 === Build the image
 
-[source,Sh]
+[source,sh]
 ----
-packer build 'packer/docker.json'
+sudo -E packer build 'packer/docker.json'
 ----

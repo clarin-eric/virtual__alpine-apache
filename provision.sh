@@ -1,12 +1,6 @@
 #!/bin/sh -ex
 
-APORTS_CFG_FILE='/etc/apk/repositories'
-
-cp "/tmp/${APORTS_CFG_FILE}" "${APORTS_CFG_FILE}"
-
-apk --verbose --progress update --purge
-
-apk \
+apk --no-cache \
   add \
   'apache2' \
   'apache2-ssl' \

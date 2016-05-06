@@ -1,11 +1,11 @@
-= Alpine Linux with Apache httpd base Docker image
+= Docker image: Alpine Linux with Apache httpd
 :caution-caption: ☡ CAUTION
 :important-caption: ❗ IMPORTANT
 :note-caption: 🛈 NOTE
 :sectanchors:
 :sectlinks:
-:sectnums:
 :sectnumlevels: 6
+:sectnums:
 :source-highlighter: pygments
 :tip-caption: 💡 TIP
 :toc-placement: preamble
@@ -16,31 +16,148 @@ The dependencies and other resources are under link:resources/[`resources/`]. Pl
 
 == Dependencies
 
-=== Resources
+[options="header"]
+|===
 
-. The CLARIN TLS key store under `/root/certstore2/`.
+| Conditions | Type | Name (URL) | Version constraint
 
-=== Software
+| by default
+| data
+| CLARIN TLS store under `/root/certstore2/`
+| *
 
-. https://packer.io[Packer] 0.10.
-. https://www.docker.com/[Docker] 1.11.
+| by default +
+for build and deployment
+| software
+| https://www.docker.com/[Docker]
+| 1.11
+
+| by default +
+for build
+| software
+| https://www.gnu.org/software/coreutils/coreutils.html[GNU Core utilities]
+| 8.25
+
+| by default +
+for build
+| software
+| https://packer.io[Packer]
+| 0.10
+
+| by default +
+for build and deployment
+| software
+| https://www.sudo.ws/[Sudo]
+| 1.8
+
+|===
 
 == To build the image
 
-=== Enter a build environment
+=== Enter a build/deploy environment
+
+IMPORTANT: Mind to choose the appropriate FQDN/virtual host name (`FQDN`) for the website in the following.
 
 [source,sh]
 ----
 env \
+  CONT_NAME='example_website' \
+  FQDN='example.clarin.eu' \
   IMAGE_NAME='alpine-apache' \
-  IMAGE_TAG='0.3.0' \
+  IMAGE_TAG='0.3.2' \
+  NET_NAME='example_website-net' \
   REGISTRY='docker.clarin.eu' \
+  VOL_NAME='example_website-vol' \
     sh
 ----
 
+[[sec_build]]
 === Build the image
 
 [source,sh]
 ----
 sudo -E packer build 'packer/docker.json'
+----
+
+== To deploy the container
+
+=== Configure
+
+[[sec_container_network]]
+==== Create the container network
+
+[source,sh]
+----
+sudo docker network \
+  create \
+  --driver='bridge' \
+  "$NET_NAME"
+----
+
+[[sec_data_volume]]
+==== Set up the data volume
+
+===== Create the data volume
+
+[source,sh]
+----
+sudo docker volume \
+  create \
+  --name="$VOL_NAME"
+----
+
+===== Provision the data volume
+
+[source,sh]
+----
+sudo docker run \
+  --rm \
+  --interactive \
+  --volume="$VOL_NAME"':/tmp/bla/' \
+  alpine \
+      tar -zvxf - -C '/tmp/' \
+  < 'lazy_session.tar.gz'
+----
+
+[[sec_configure_container]]
+==== Configure the container
+
+[source,sh]
+----
+sudo docker create \
+  --entrypoint='/usr/local/bin/dumb-init' \
+  --hostname="$FQDN" \
+  --name="$CONT_NAME" \
+  --net="$NET_NAME" \
+  --publish='443:443' \
+  --publish='80:80' \
+  --restart=unless-stopped \
+  --volume="$VOL_NAME"':/var/www/localhost/:rw' \
+  --volume='/root/certstore2/:/root/certstore2/:ro' \
+  "docker.clarin.eu/$IMAGE_NAME:$IMAGE_TAG" \
+    --single-child \
+    /usr/sbin/httpd -D 'FOREGROUND'
+----
+
+NOTE: Publish either port 80 (http) or 443 (https) or both. URLs accessed with the http scheme are permanently redirected to their equivalent with the https scheme.
+
+[[sec_start_container]]
+=== Start the container
+
+[source,sh]
+----
+sudo docker start "$CONT_NAME"
+----
+
+=== To inspect
+
+[source,sh]
+----
+sudo docker exec \
+  --interactive='true' \
+  --tty='true' \
+  "$CONT_NAME" \
+    tail \
+    -f '/var/log/apache2/access.log' \
+    -f '/var/log/apache2/error.log'
 ----

@@ -1,5 +1,6 @@
 = Docker image: Alpine Linux with Apache httpd
 :caution-caption: ☡ CAUTION
+:image_version: 0.5.0
 :important-caption: ❗ IMPORTANT
 :note-caption: 🛈 NOTE
 :sectanchors:
@@ -12,7 +13,7 @@
 :toc:
 :warning-caption: ⚠ WARNING
 
-The dependencies and other resources are under link:resources/[`resources/`]. Please issue all of the following shell statements from within the root directory of this repository. Sections with titles starting with A, B, ... are alternative.
+Dependencies not listed in the following are under link:resources/[`resources/`]. Please issue all of the following shell statements from within the root directory of this repository. Sections with titles starting with A, B, ... are alternative.
 
 == Dependencies
 
@@ -56,15 +57,15 @@ for build and deployment
 
 === Enter a build/deploy environment
 
-IMPORTANT: Mind to choose the appropriate FQDN/virtual host name (`FQDN`) for the website in the following.
+IMPORTANT: Mind to choose the appropriate Fully Qualified Domain Name (FQDN) for the website in the following.
 
-[source,sh]
+[source,sh,subs="attributes"]
 ----
 env \
   CONT_NAME='example_website' \
   FQDN='example.clarin.eu' \
   IMAGE_NAME='alpine-apache' \
-  IMAGE_TAG='0.3.2' \
+  IMAGE_TAG='{image_version}' \
   NET_NAME='example_website-net' \
   REGISTRY='docker.clarin.eu' \
   VOL_NAME='example_website-vol' \
@@ -111,12 +112,19 @@ sudo docker volume \
 [source,sh]
 ----
 sudo docker run \
-  --rm \
-  --interactive \
-  --volume="$VOL_NAME"':/tmp/bla/' \
-  alpine \
-      tar -zvxf - -C '/tmp/' \
-  < 'lazy_session.tar.gz'
+    --rm \
+    --interactive \
+    --volume="$VOL_NAME"':/var/www/localhost/htdocs/:rw' \
+    alpine \
+      find '/var/www/localhost/htdocs/' -mindepth '1' -exec rm -rv '{}' +
+
+tar -cvzf - -C 'resources/htdocs/' . | \
+  sudo docker run \
+    --rm \
+    --interactive \
+    --volume="$VOL_NAME"':/var/www/localhost/htdocs/:rw' \
+    alpine \
+        tar -xvzf - -C '/var/www/localhost/htdocs/'
 ----
 
 [[sec_configure_container]]
@@ -131,10 +139,10 @@ sudo docker create \
   --net="$NET_NAME" \
   --publish='443:443' \
   --publish='80:80' \
-  --restart=unless-stopped \
-  --volume="$VOL_NAME"':/var/www/localhost/:rw' \
+  --restart='unless-stopped' \
+  --volume="$VOL_NAME"':/var/www/localhost/htdocs/:ro' \
   --volume='/root/certstore2/:/root/certstore2/:ro' \
-  "docker.clarin.eu/$IMAGE_NAME:$IMAGE_TAG" \
+  "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" \
     --single-child \
     /usr/sbin/httpd -D 'FOREGROUND'
 ----
@@ -149,15 +157,9 @@ NOTE: Publish either port 80 (http) or 443 (https) or both. URLs accessed with t
 sudo docker start "$CONT_NAME"
 ----
 
-=== To inspect
+=== To follow logging output
 
 [source,sh]
 ----
-sudo docker exec \
-  --interactive='true' \
-  --tty='true' \
-  "$CONT_NAME" \
-    tail \
-    -f '/var/log/apache2/access.log' \
-    -f '/var/log/apache2/error.log'
+sudo docker logs -f "$CONT_NAME"
 ----

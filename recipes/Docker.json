@@ -1,58 +1,60 @@
 {
-	"builders": [
-		{
-			"commit": true,
-			"image": "alpine:3.3",
-			"name": "alpine-apache",
-			"pull": false,
-			"run_command": [
-				"--detach=true",
-				"--interactive=true",
-				"--net=host",
-				"--tmpfs=/run:rw,nodev,nosuid",
-				"--tmpfs=/tmp:rw,nodev,nosuid,mode=1777",
-				"--tty=true",
-				"--volume={{template_dir}}/../provisioning/:/provisioning/:ro",
-				"--volume={{user `resources_dir_path`}}/etc/apache2/conf.d/TLS.conf:/TLS.conf:ro",
-				"--volume={{user `VAR_CACHE_VOLUME`}}:/var/cache/:rw",
-				"{{.Image}}",
-				"/bin/sh",
-				"-ex"
-			],
-			"type": "docker"
-		}
-	],
-	"post-processors": [
-		{
-			"repository": "{{user `REGISTRY`}}/alpine-apache",
-			"tag": "{{user `IMAGE_TAG`}}",
-			"type": "docker-tag"
-		}
-	],
-	"provisioners": [
-		{
-			"inline": [
-				"apk --quiet update --update-cache ; apk --quiet add --upgrade 'python3' 1>&2"
-			],
-			"remote_path": "/provision.sh",
-			"type": "shell"
-		},
-		{
-			"environment_vars": [
-				"SERVERNAME={{user `SERVERNAME`}}"
-			],
-			"remote_path": "/provision.py",
-			"scripts": [
-				"{{template_dir}}/../provision.py"
-			],
-			"type": "shell"
-		}
-	],
-	"variables": {
-		"IMAGE_TAG": "{{env `IMAGE_TAG`}}",
-		"REGISTRY": "{{env `REGISTRY`}}",
-		"SERVERNAME": "{{env `SERVERNAME`}}",
-		"VAR_CACHE_VOLUME": "{{env `VAR_CACHE_VOLUME`}}",
-		"resources_dir_path": "{{template_dir}}/../resources/"
-	}
+  "builders": [
+    {
+      "commit": true,
+      "image": "alpine:3.4",
+      "name": "alpine-apache",
+      "pull": false,
+      "run_command": [
+        "--detach=true",
+        "--interactive=true",
+        "--net=host",
+        "--tmpfs=/run/:rw,noatime,nodev,noexec,mode=700",
+        "--tmpfs=/tmp/:rw,noatime,nodev,noexec,mode=1777",
+        "--tty=true",
+        "--volume={{user `resources_dir_path`}}/../mutate_dynamic_httpd_cfg.py:/mutate_dynamic_httpd_cfg.py:ro",
+        "--volume={{user `resources_dir_path`}}/foundation.conf:/foundation.conf:ro",
+        "--volume={{user `resources_dir_path`}}/logging_cfg.json:/logging_cfg.json:ro",
+        "--volume={{user `resources_dir_path`}}/provisioning.tar:/provisioning.tar:ro",
+        "--volume={{user `VAR_CACHE_VOLUME`}}:/var/cache/:rw",
+        "{{.Image}}",
+        "/bin/sh",
+        "-ex"
+      ],
+      "type": "docker"
+    }
+  ],
+  "post-processors": [
+    {
+      "repository": "{{user `REGISTRY`}}/alpine-apache",
+      "tag": "{{user `IMAGE_TAG`}}",
+      "type": "docker-tag"
+    }
+  ],
+  "provisioners": [
+    {
+      "inline": [
+        "apk --quiet update --update-cache",
+        "apk --quiet add --upgrade 'python3' 'tar' 1>&2",
+        "mkdir -- '/usr/lib/python3.5/site-packages/provisioning/' '/etc/sys-provisioning/'",
+        "cp -- '/logging_cfg.json' '/etc/sys-provisioning/'",
+        "tar --auto-compress --directory='/usr/lib/python3.5/site-packages/provisioning' --extract --file='/provisioning.tar' --same-permissions --strip-components='1'"
+      ],
+      "remote_path": "/provision.sh",
+      "type": "shell"
+    },
+    {
+      "remote_path": "/provision.py",
+      "scripts": [
+        "{{template_dir}}/../provision.py"
+      ],
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "IMAGE_TAG": "{{env `IMAGE_TAG`}}",
+    "REGISTRY": "{{env `REGISTRY`}}",
+    "VAR_CACHE_VOLUME": "{{env `VAR_CACHE_VOLUME`}}",
+    "resources_dir_path": "{{template_dir}}/../resources/"
+  }
 }

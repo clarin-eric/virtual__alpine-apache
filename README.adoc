@@ -1,6 +1,5 @@
-= Docker image: Alpine Linux with Apache httpd
+= Image: Alpine Linux with Apache httpd (`alpine-apache`)
 :caution-caption: ☡ CAUTION
-:image_version: 0.5.0
 :important-caption: ❗ IMPORTANT
 :note-caption: 🛈 NOTE
 :sectanchors:
@@ -13,153 +12,73 @@
 :toc:
 :warning-caption: ⚠ WARNING
 
-Dependencies not listed in the following are under link:resources/[`resources/`]. Please issue all of the following shell statements from within the root directory of this repository. Sections with titles starting with A, B, ... are alternative.
+You can use this project to build a Docker container image.
+Using a container based on this image, you can serve a website using https://httpd.apache.org/[Apache httpd web server].
+This image is not meant for direct use.
+
+Please issue all of the following shell statements from within the root directory of this repository.
 
 == Dependencies
 
-[options="header"]
+[options="header",cols=",,,m"]
 |===
 
 | Conditions | Type | Name (URL) | Version constraint
 
+| by necessity
+| software
+| https://www.docker.com/[Docker Engine]
+| >=1.11
+
+| by necessity
+| image
+| https://github.com/gliderlabs/docker-alpine[`gliderlabs/alpine`]
+| ==3.4
+
 | by default
-| data
-| CLARIN TLS store under `/root/certstore2/`
-| *
-
-| by default +
-for build and deployment
-| software
-| https://www.docker.com/[Docker]
-| 1.11
-
-| by default +
-for build
-| software
-| https://www.gnu.org/software/coreutils/coreutils.html[GNU Core utilities]
-| 8.25
-
-| by default +
-for build
 | software
 | https://packer.io[Packer]
-| 0.10
+| >=0.10
 
-| by default +
-for build and deployment
+| by default
 | software
 | https://www.sudo.ws/[Sudo]
-| 1.8
+| >=1.8
+
+| by necessity
+| library
+| https://github.com/sanmai-NL/sys-provisioning[`sys-provisioning`]
+| >=0.2.0
 
 |===
 
 == To build the image
 
-=== Enter a build/deploy environment
-
-IMPORTANT: Mind to choose the appropriate Fully Qualified Domain Name (FQDN) for the website in the following.
-
-[source,sh,subs="attributes"]
-----
-env \
-  CONT_NAME='example_website' \
-  FQDN='example.clarin.eu' \
-  IMAGE_NAME='alpine-apache' \
-  IMAGE_TAG='{image_version}' \
-  NET_NAME='example_website-net' \
-  REGISTRY='docker.clarin.eu' \
-  VOL_NAME='example_website-vol' \
-    sh
-----
-
-[[sec_build]]
-=== Build the image
+=== Fetch dependencies
 
 [source,sh]
 ----
-sudo -E packer build 'packer/docker.json'
+curl --fail --location --silent --tlsv1.2 'https://github.com/sanmai-NL/sys-provisioning/archive/0.2.0.tar.gz' | \
+    dd of='resources/provisioning.tar'
 ----
 
-== To deploy the container
+=== Configure the build
 
-=== Configure
+Take a look at link:.env[`.env`].
+It contains environment variables relevant to the build.
 
-[[sec_container_network]]
-==== Create the container network
+=== Run the build
 
 [source,sh]
 ----
-sudo docker network \
-  create \
-  --driver='bridge' \
-  "$NET_NAME"
-----
-
-[[sec_data_volume]]
-==== Set up the data volume
-
-===== Create the data volume
-
-[source,sh]
-----
-sudo docker volume \
-  create \
-  --name="$VOL_NAME"
-----
-
-===== Provision the data volume
-
-[source,sh]
-----
-sudo docker run \
-    --rm \
-    --interactive \
-    --volume="$VOL_NAME"':/var/www/localhost/htdocs/:rw' \
-    alpine \
-      find '/var/www/localhost/htdocs/' -mindepth '1' -exec rm -rv '{}' +
-
-tar -cvzf - -C 'resources/htdocs/' . | \
-  sudo docker run \
-    --rm \
-    --interactive \
-    --volume="$VOL_NAME"':/var/www/localhost/htdocs/:rw' \
-    alpine \
-        tar -xvzf - -C '/var/www/localhost/htdocs/'
-----
-
-[[sec_configure_container]]
-==== Configure the container
-
-[source,sh]
-----
-sudo docker create \
-  --entrypoint='/usr/local/bin/dumb-init' \
-  --hostname="$FQDN" \
-  --name="$CONT_NAME" \
-  --net="$NET_NAME" \
-  --publish='443:443' \
-  --publish='80:80' \
-  --restart='unless-stopped' \
-  --volume="$VOL_NAME"':/var/www/localhost/htdocs/:ro' \
-  --volume='/root/certstore2/:/root/certstore2/:ro' \
-  "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" \
-    --single-child \
-    /usr/sbin/httpd -D 'FOREGROUND'
-----
-
-NOTE: Publish either port 80 (http) or 443 (https) or both. URLs accessed with the http scheme are permanently redirected to their equivalent with the https scheme.
-
-[[sec_start_container]]
-=== Start the container
-
-[source,sh]
-----
-sudo docker start "$CONT_NAME"
-----
-
-=== To follow logging output
-
-[source,sh]
-----
-sudo docker logs -f "$CONT_NAME"
+sudo -- sh -acex '. ".env" ;
+    clear_cache() {
+        status=$? ;
+        docker volume rm "${VAR_CACHE_VOLUME}" ;
+        return $status ;
+    }
+    trap clear_cache "INT" "TERM" "EXIT" ;
+    VAR_CACHE_VOLUME="$(docker volume create)" ;
+    packer build "recipes/Docker.json" ;
+    date' ;
 ----

@@ -1,0 +1,41 @@
+{
+  "disable_existing_loggers": true,
+  "formatters": {
+    "brief": {
+      "class": "logging.Formatter",
+      "datefmt": "%I:%M:%S",
+      "format": "{levelname:8s}\t{name:<15s}\t{message:s}",
+      "style": "{"
+    },
+    "verbose": {
+      "class": "logging.Formatter",
+      "datefmt": "%I:%M:%S",
+      "format": "{levelname:8s}\t{process:5d}\t{threadName:8s}\t{funcName:s}\t{asctime:s}\t{name:<15s}\t{lineno:4d}\t{message:s}",
+      "style": "{"
+    }
+  },
+  "handlers": {
+    "file_handler": {
+      "class": "logging.FileHandler",
+      "encoding": "utf-8",
+      "filename": "/build.log",
+      "formatter": "verbose",
+      "level": "DEBUG",
+      "mode": "a"
+    },
+    "tty_handler": {
+      "class": "logging.StreamHandler",
+      "formatter": "brief",
+      "level": "DEBUG"
+    }
+  },
+  "loggers": {},
+  "root": {
+    "handlers": [
+      "tty_handler",
+      "file_handler"
+    ],
+    "level": "DEBUG"
+  },
+  "version": 1
+}

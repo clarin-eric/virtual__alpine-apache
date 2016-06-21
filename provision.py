@@ -27,12 +27,6 @@ def install_dumbinit(dumbinit_release_url: str) -> None:
 
 
 def configure_apache_httpd() -> None:
-    # TODO: Defect in apache2 Aport: apache system group not added.
-    # Since I couldn't get gid correct afterward, directly alter OS databases.
-    sh_cmd("addgroup -S 'apache'")
-    sh_cmd(
-        "sed -r -i 's/apache:x:100:65533:/apache:x:100:101:/' '/etc/passwd'")
-
     sh_cmd("mkdir -- '/var/www/dynamic_cfg/'")
     sh_cmd("touch -- '/var/www/dynamic_cfg/website.conf'")
 

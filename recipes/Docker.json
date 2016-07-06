@@ -35,8 +35,8 @@
     {
       "inline": [
         "apk --quiet update --update-cache",
-        "apk --quiet add --upgrade 'python3' 'tar' 1>&2",
-        "mkdir -- '/usr/lib/python3.5/site-packages/provisioning/' '/etc/sys-provisioning/'",
+        "apk --quiet add --upgrade 'python3==3.5.1-r3' 'tar==1.29-r0' 1>&2",
+        "mkdir -- /usr/lib/python3.5/site-packages/provisioning/ '/etc/sys-provisioning/'",
         "cp -- '/logging_cfg.json' '/etc/sys-provisioning/'",
         "tar --auto-compress --directory='/usr/lib/python3.5/site-packages/provisioning' --extract --file='/provisioning.tar' --same-permissions --strip-components='1'"
       ],

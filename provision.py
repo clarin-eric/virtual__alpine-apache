@@ -15,13 +15,13 @@ def install_management_scripts() -> None:
     sh_cmd("chmod 'a=rx' -- '/usr/local/bin/mutate_dynamic_httpd_cfg.py'")
 
 
-def install_dumbinit(dumbinit_release_url: str) -> None:
+def install_dumbinit(executable_url: str, sha256_val: str) -> None:
     sh_cmd('curl --fail --location --show-error --silent --tlsv1.2 '
-           "--output 'dumb-init' " + dumbinit_release_url,
+           "--output 'dumb-init' " + executable_url,
            cwd='/usr/local/bin/')
     sh_cmd('printf '
-           "'a8defac40aaca2ca0896c7c5adbc241af60c7c3df470c1a4c469a860bd805429 "
-           "*dumb-init\n' | sha256sum -c -s '-'",
+           "'{sha256_val:s} "
+           "*dumb-init\n' | sha256sum -c -s '-'".format(sha256_val=sha256_val),
            cwd='/usr/local/bin/')
     sh_cmd("chmod 'a+x' -- 'dumb-init'", cwd='/usr/local/bin/')
 
@@ -98,21 +98,21 @@ def configure_apache_httpd() -> None:
 
 if __name__ == '__main__':
     with provision():
-        COMPLETED_PROCESS = sh_cmd(
-            'apk add --upgrade '
-            "'apache2=>2.4.20' 'apache2<2.4.21' "
-            "'apache2-ssl=>2.4.20' 'apache2-ssl<2.4.21' "
-            "'ca-certificates' "
-            "'curl>=7.49.1' 'curl<7.50' "
-            "'python3>=3.5.1' 'python3<3.6' 1>&2",
-            stdout=PIPE)
+        COMPLETED_PROCESS = sh_cmd('apk add --upgrade '
+                                   'apache2==2.4.20-r2 '
+                                   'apache2-ssl==2.4.20-r2 '
+                                   'ca-certificates '
+                                   'curl==7.49.1-r0 1>&2',
+                                   stdout=PIPE)
         debug(COMPLETED_PROCESS.stderr.decode(encoding=getpreferredencoding(
             False)))
 
         install_management_scripts()
 
         install_dumbinit(
-            dumbinit_release_url='https://github.com/Yelp/dumb-init/'
-            'releases/download/v1.0.2/dumb-init_1.0.2_amd64')
+            executable_url='https://github.com/Yelp/dumb-init/releases/'
+            'download/v1.1.1/dumb-init_1.1.1_amd64',
+            sha256_val='87bdb684cf9ad20dcbdec47ee62389168fb530c024ccd026d95f88'
+            '8f16136e44')
 
         configure_apache_httpd()

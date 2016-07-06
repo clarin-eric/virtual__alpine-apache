@@ -58,8 +58,9 @@ Please issue all of the following shell statements from within the root director
 
 [source,sh]
 ----
-curl --fail --location --silent --tlsv1.2 'https://github.com/sanmai-NL/sys-provisioning/archive/0.2.0.tar.gz' | \
-    dd of='resources/provisioning.tar'
+curl --fail --location --silent --tlsv1.2 \
+    'https://github.com/sanmai-NL/sys-provisioning/archive/0.2.0.tar.gz' | \
+        dd of='resources/provisioning.tar'
 ----
 
 === Configure the build
@@ -71,7 +72,7 @@ It contains environment variables relevant to the build.
 
 [source,sh]
 ----
-sudo -- sh -acex '. ".env" ;
+sudo -- sh -acex '. ./.env ;
     clear_cache() {
         status=$? ;
         docker volume rm "${VAR_CACHE_VOLUME}" ;

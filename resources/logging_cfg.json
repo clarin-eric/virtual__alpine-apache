@@ -4,7 +4,7 @@
     "brief": {
       "class": "logging.Formatter",
       "datefmt": "%I:%M:%S",
-      "format": "{levelname:8s}\t{name:<15s}\t{message:s}",
+      "format": "{levelname:8s}\t{process:5d}\t{message:s}",
       "style": "{"
     },
     "verbose": {

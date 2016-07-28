@@ -49,6 +49,11 @@ def configure_apache_httpd() -> None:
         r_val_1_2 = r'(?:\s+[^\s#]+){1,2}\n'
         r_val_2 = r'\s+[^\s#]+\s+[^\s#]+\n'
         added_media_types = False
+        directives_to_disable = (
+            r'Listen' + r_val,
+            r'LoadModule\s+(?:mpm_prefork_module|mpm_worker_module|'
+            r'status_module)' + r_val,
+            r'(?:Access|Custom|Error|Global|Transfer)Log' + r_val_1_2)
         for line in httpd_config_lines:
             if fullmatch(r'(\s*#(?:\s.*|)|)\n', line):
                 continue
@@ -84,13 +89,8 @@ def configure_apache_httpd() -> None:
                 httpd_cfg_file.write('AddType font/woff2 .woff2\n')
                 httpd_cfg_file.write(line)
                 added_media_types = True
-            elif any(
-                    fullmatch(l_act + regex, line)
-                    for regex in
-                (r'Listen' + r_val,
-                 r'LoadModule\s+(?:mpm_prefork_module|mpm_worker_module|'
-                 r'status_module)' + r_val,
-                 r'(?:Access|Custom|Error|Global|Transfer)Log' + r_val_1_2)):
+            elif any(fullmatch(l_act + regex, line) \
+                for regex in directives_to_disable):
                 httpd_cfg_file.write('#' + line)
             else:
                 httpd_cfg_file.write(line)

@@ -45,6 +45,8 @@ def configure_apache_httpd() -> None:
         r_val = r'\s+[^\s#]+\n'
         # TODO: Does not handle spaces within parameters.
         r_val_1_2 = r'(?:\s+[^\s#]+){1,2}\n'
+        r_val_2 = r'\s+[^\s#]+\s+[^\s#]+\n'
+        added_media_types = False
         for line in httpd_config_lines:
             if fullmatch(r'(\s*#(?:\s.*|)|)\n', line):
                 continue
@@ -74,6 +76,12 @@ def configure_apache_httpd() -> None:
                 # Set MPM. WARNING: This choice of MPM is not compatible
                 # with mod_php. See https://wiki.apache.org/httpd/php .
                 httpd_cfg_file.write(line[1:])
+            elif fullmatch(l_any + r'AddType' + r_val_2, line) and \
+                not added_media_types:
+                httpd_cfg_file.write('AddType application/font-woff .woff\n')
+                httpd_cfg_file.write('AddType font/woff2 .woff2\n')
+                httpd_cfg_file.write(line)
+                added_media_types = True
             elif any(
                     fullmatch(l_act + regex, line)
                     for regex in

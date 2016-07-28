@@ -78,7 +78,7 @@ def configure_apache_httpd() -> None:
                 # Set MPM. WARNING: This choice of MPM is not compatible
                 # with mod_php. See https://wiki.apache.org/httpd/php .
                 httpd_cfg_file.write(line[1:])
-            elif fullmatch(l_any + r'AddType' + r_val_2,
+            elif fullmatch(l_act + r'AddType' + r_val_2,
                            line) and not added_media_types:
                 httpd_cfg_file.write('AddType application/font-woff .woff\n')
                 httpd_cfg_file.write('AddType font/woff2 .woff2\n')

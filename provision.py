@@ -110,8 +110,8 @@ if __name__ == '__main__':
     with provision():
         COMPLETED_PROCESS = sh_cmd(
             'apk add --upgrade '
-            'apache2==2.4.20-r2 '
-            'apache2-ssl==2.4.20-r2 '
+            'apache2==2.4.23-r1 '
+            'apache2-ssl==2.4.23-r1 '
             'ca-certificates '
             'curl==7.49.1-r0 1>&2',
             stdout=PIPE)

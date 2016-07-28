@@ -16,13 +16,15 @@ def install_management_scripts() -> None:
 
 
 def install_dumbinit(executable_url: str, sha256_val: str) -> None:
-    sh_cmd('curl --fail --location --show-error --silent --tlsv1.2 '
-           "--output 'dumb-init' " + executable_url,
-           cwd='/usr/local/bin/')
-    sh_cmd('printf '
-           "'{sha256_val:s} "
-           "*dumb-init\n' | sha256sum -c -s '-'".format(sha256_val=sha256_val),
-           cwd='/usr/local/bin/')
+    sh_cmd(
+        'curl --fail --location --show-error --silent --tlsv1.2 '
+        "--output 'dumb-init' " + executable_url,
+        cwd='/usr/local/bin/')
+    sh_cmd(
+        'printf '
+        "'{sha256_val:s} "
+        "*dumb-init\n' | sha256sum -c -s '-'".format(sha256_val=sha256_val),
+        cwd='/usr/local/bin/')
     sh_cmd("chmod 'a+x' -- 'dumb-init'", cwd='/usr/local/bin/')
 
 
@@ -32,8 +34,8 @@ def configure_apache_httpd() -> None:
 
     httpd_cfg_file_path = Path('/etc/apache2/httpd.conf')
     sh_cmd('cp -a -- {:s} {:s}'.format(
-        quote(str(httpd_cfg_file_path)), quote(str(
-            httpd_cfg_file_path.with_suffix('.conf.orig')))))
+        quote(str(httpd_cfg_file_path)), quote(
+            str(httpd_cfg_file_path.with_suffix('.conf.orig')))))
     with httpd_cfg_file_path.open(mode='rt+') as httpd_cfg_file:
         httpd_config_lines = httpd_cfg_file.readlines()
         httpd_cfg_file.seek(0)
@@ -76,8 +78,8 @@ def configure_apache_httpd() -> None:
                 # Set MPM. WARNING: This choice of MPM is not compatible
                 # with mod_php. See https://wiki.apache.org/httpd/php .
                 httpd_cfg_file.write(line[1:])
-            elif fullmatch(l_any + r'AddType' + r_val_2, line) and \
-                not added_media_types:
+            elif fullmatch(l_any + r'AddType' + r_val_2,
+                           line) and not added_media_types:
                 httpd_cfg_file.write('AddType application/font-woff .woff\n')
                 httpd_cfg_file.write('AddType font/woff2 .woff2\n')
                 httpd_cfg_file.write(line)
@@ -106,14 +108,16 @@ def configure_apache_httpd() -> None:
 
 if __name__ == '__main__':
     with provision():
-        COMPLETED_PROCESS = sh_cmd('apk add --upgrade '
-                                   'apache2==2.4.20-r2 '
-                                   'apache2-ssl==2.4.20-r2 '
-                                   'ca-certificates '
-                                   'curl==7.49.1-r0 1>&2',
-                                   stdout=PIPE)
-        debug(COMPLETED_PROCESS.stderr.decode(encoding=getpreferredencoding(
-            False)))
+        COMPLETED_PROCESS = sh_cmd(
+            'apk add --upgrade '
+            'apache2==2.4.20-r2 '
+            'apache2-ssl==2.4.20-r2 '
+            'ca-certificates '
+            'curl==7.49.1-r0 1>&2',
+            stdout=PIPE)
+        debug(
+            COMPLETED_PROCESS.stderr.decode(encoding=getpreferredencoding(
+                False)))
 
         install_management_scripts()
 
